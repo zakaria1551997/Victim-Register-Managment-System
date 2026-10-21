@@ -1,0 +1,6 @@
+{
+  "name": "জখমী রেজিস্টার ব্যবস্থাপনা সিস্টেম",
+  "description": "বাংলাদেশের হাসপাতাল ও স্বাস্থ্য প্রতিষ্ঠানের জন্য পূর্ণাঙ্গ, নিরাপদ, বাংলা ভাষার ডিজিটাল জখমী রেজিস্টার ম্যানেজমেন্ট সিস্টেম (PostgreSQL, Express ও React)।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

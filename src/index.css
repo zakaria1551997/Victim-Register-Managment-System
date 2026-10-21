@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+    font-feature-settings: "kern" 1;
+  }
+
+  .font-mono-tabular {
+    font-family: 'JetBrains Mono', 'Hind Siliguri', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Custom thin scrollbar for the 13-column desktop register table */
+.register-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 8px;
+}
+.register-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+.register-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 6px;
+}
+.register-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Official A4 Landscape Print Styles for Hospital Injury Register */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  table.print-register-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8.5pt !important;
+    page-break-inside: auto;
+  }
+
+  table.print-register-table tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  table.print-register-table th,
+  table.print-register-table td {
+    border: 1px solid #1e293b !important;
+    padding: 4px 5px !important;
+    vertical-align: top !important;
+    color: #000000 !important;
+  }
+
+  table.print-register-table thead {
+    display: table-header-group;
+    background-color: #f1f5f9 !important;
+  }
+}
