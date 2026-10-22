@@ -260,9 +260,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex bg-[#f1f5f9] text-slate-900">
-      {/* LEFT SIDEBAR (Desktop persistent, Mobile slide-over) — Matching Hospital Mockup */}
+      {/* LEFT SIDEBAR (Fixed on Desktop during mouse scroll, Mobile slide-over) */}
       <aside
-        className={`no-print fixed inset-y-0 left-0 z-40 w-64 bg-[#0f2942] text-white flex flex-col transition-transform duration-200 lg:static lg:translate-x-0 shrink-0 ${
+        className={`no-print fixed inset-y-0 left-0 z-40 w-64 h-screen bg-[#0f2942] text-white flex flex-col transition-transform duration-200 lg:translate-x-0 shrink-0 ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -344,7 +344,7 @@ export default function App() {
       )}
 
       {/* MAIN WORKSPACE COLUMN */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 lg:ml-64 print:ml-0">
         {/* TOP HEADER BAR — Matching Hospital Mockup */}
         <header className="no-print bg-white border-b border-slate-200 px-4 lg:px-6 py-3.5 flex items-center justify-between gap-4 sticky top-0 z-20">
           <div className="flex items-center gap-3 min-w-0">

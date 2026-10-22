@@ -226,6 +226,7 @@ const PERMISSION_DEFINITIONS: Array<{
   { code: 'RECORD_EDIT_OWN_DRAFT', nameBn: 'নিজের খসড়া/ফেরত রেকর্ড সংশোধন', moduleBn: 'রেকর্ড ব্যবস্থাপনা' },
   { code: 'RECORD_EDIT_ANY', nameBn: 'যেকোনো অনিষ্পন্ন রেকর্ড সম্পাদনা', moduleBn: 'রেকর্ড ব্যবস্থাপনা' },
   { code: 'RECORD_EDIT_APPROVED', nameBn: 'অনুমোদিত রেকর্ড সংশোধন (পুনঃঅনুমোদন সাপেক্ষে)', moduleBn: 'রেকর্ড ব্যবস্থাপনা' },
+  { code: 'RECORD_DELETE', nameBn: 'জখমী রেকর্ড ডিলিট করা', moduleBn: 'রেকর্ড ব্যবস্থাপনা' },
   { code: 'RECORD_SUBMIT', nameBn: 'যাচাইয়ের জন্য রেকর্ড জমা দেওয়া', moduleBn: 'যাচাই ও অনুমোদন' },
   { code: 'RECORD_VERIFY', nameBn: 'রেকর্ড যাচাই ও ফেরত প্রদান', moduleBn: 'যাচাই ও অনুমোদন' },
   { code: 'RECORD_APPROVE', nameBn: 'রেকর্ড চূড়ান্ত অনুমোদন বা প্রত্যাখ্যান', moduleBn: 'যাচাই ও অনুমোদন' },
@@ -270,8 +271,29 @@ export async function getDb(): Promise<DatabaseAdapter> {
       },
     };
   } else {
-    const pglite = new PGlite(PGDATA_DIR);
-    await pglite.waitReady;
+    let pglite: PGlite;
+    try {
+      const pidFile = path.join(PGDATA_DIR, 'postmaster.pid');
+      if (fs.existsSync(pidFile)) {
+        try {
+          fs.unlinkSync(pidFile);
+        } catch {
+          // ignore
+        }
+      }
+      pglite = new PGlite(PGDATA_DIR);
+      await pglite.waitReady;
+    } catch (err) {
+      console.warn('Recovering PGlite data directory after unclean shutdown:', err);
+      try {
+        fs.rmSync(PGDATA_DIR, { recursive: true, force: true });
+        pglite = new PGlite(PGDATA_DIR);
+        await pglite.waitReady;
+      } catch {
+        pglite = new PGlite();
+        await pglite.waitReady;
+      }
+    }
     dbInstance = {
       mode: 'EMBEDDED_POSTGRES_PGLITE',
       query: async <T = any>(sql: string, params?: any[]): Promise<QueryResult<T>> => {
@@ -310,14 +332,7 @@ function createSampleSvgDocument(titleBn: string, regNo: string, patientNameBn: 
 async function initializeSchemaAndSeed(db: DatabaseAdapter) {
   await db.exec(SCHEMA_SQL);
 
-  // Check if roles are already seeded
-  const existingRoles = await db.query<{ count: string }>('SELECT COUNT(*) as count FROM roles');
-  const count = Number(existingRoles.rows[0]?.count || 0);
-  if (count > 0) {
-    return;
-  }
-
-  // 1. Seed Roles
+  // 1. Always ensure Roles exist
   const roleDescriptions: Record<UserRoleCode, string> = {
     SYSTEM_ADMIN: 'সিস্টেম পরিচালনা, ব্যবহারকারী ও অনুমতি নিয়ন্ত্রণ, ব্যাকআপ এবং সম্পূর্ণ রেজিস্টার তদারকি।',
     DATA_ENTRY_OPERATOR: 'নতুন জখমী রেকর্ড এন্ট্রি, খসড়া সংরক্ষণ, ফাইল সংযুক্তি এবং যাচাইয়ের জন্য জমা প্রদান।',
@@ -334,7 +349,7 @@ async function initializeSchemaAndSeed(db: DatabaseAdapter) {
     );
   }
 
-  // 2. Seed Permissions & Role-Permission mappings
+  // 2. Always ensure Permissions & Role-Permission mappings exist
   for (const perm of PERMISSION_DEFINITIONS) {
     await db.query(
       `INSERT INTO permissions (code, name_bn, module_bn) VALUES ($1, $2, $3) ON CONFLICT (code) DO NOTHING`,
@@ -349,6 +364,13 @@ async function initializeSchemaAndSeed(db: DatabaseAdapter) {
         [roleCode, permCode]
       );
     }
+  }
+
+  // Check if users are already seeded
+  const existingUsers = await db.query<{ count: string }>('SELECT COUNT(*) as count FROM users');
+  const count = Number(existingUsers.rows[0]?.count || 0);
+  if (count > 0) {
+    return;
   }
 
   // 3. Seed Hospital Users (Default password for demo/testing: Hospital@2026)
